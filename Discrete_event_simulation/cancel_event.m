@@ -1,5 +1,5 @@
 function [updated_list] = cancel_event(list, event)
-    updated_list = list
+    updated_list = list;
     
     % need to find event, but i don't care about the time (that's why 1:2):
     [tf, index] = ismember(list(:,1:2),event(1:2),'rows');

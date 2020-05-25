@@ -1,4 +1,4 @@
-function [ts, xs] = corona_DES(N)
+function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
     % code:
     % -event ids
     %   1 infection
@@ -13,6 +13,7 @@ function [ts, xs] = corona_DES(N)
     infect = 2;
     recover = 3;
     contact = 4;
+    restrictions = 5;
     
     
     % -for individuals
@@ -22,10 +23,10 @@ function [ts, xs] = corona_DES(N)
     %   4 recovered
     
     % execution params
-    max_iterations = 1000;
+    max_iterations = max([N/2, 1000000]);
     %     xs = ones(N,max_iterations); % for saving the population values
     xs = zeros(4,max_iterations); % saving populations is easier just by looking at the sums
-    ts = zeros(max_iterations); % saving the time steps
+    ts = zeros(1,max_iterations); % saving the time steps
     current_population = ones(N,1); % this is basically interchangeable with xs, but has information of all individuals. 
     % all ones means all are susceptible.
     % (i could have saved everything in xs but it would have been
@@ -33,11 +34,11 @@ function [ts, xs] = corona_DES(N)
 
     % update times (might be exchanged with exprnd()mean parameters and
     % sampled in switch
-    t_e = 2;
-    t_c = 1;
-    t_r = 14;
+%     t_e = 2;
+%     t_c = 1;
+%     t_r = 14;
     
-    p_i = 0.7; % infection probability at contact
+%     p_i = 0.7; % infection probability at contact
 
     % run event
 
@@ -47,7 +48,12 @@ function [ts, xs] = corona_DES(N)
     event_list = schedule_event(event_list, event);
     
     counter = 1;
-    event_list;
+    
+    restrictions_scheduled = false;
+    
+    max_test = 0
+    
+    rng(seed);
     
     while ~isempty(event_list) && counter < max_iterations
         counter = counter + 1;
@@ -59,17 +65,19 @@ function [ts, xs] = corona_DES(N)
         t = event(3);
         ts(counter) = t;
         
-
+        if t > 21 && ~restrictions_scheduled
+            schedule_event(event_list, [5,-1,t]);
+        end
         
         switch event_id
             case infection
                 update = [-1 1 0 0]';
-                scheduled_events = [infect, id, t + t_e];
+                scheduled_events = [infect, id, t + exprnd(t_e)];
                 current_population(id) = 2;
             case infect
                 update = [0 -1 +1 0]';
-                scheduled_events = [recover, id, t + t_r;
-                                    contact, id, t + t_c];
+                scheduled_events = [recover, id, t + exprnd(t_r);
+                                    contact, id, t + exprnd(t_c)];
                 current_population(id) = 3;
 
             case contact
@@ -80,10 +88,10 @@ function [ts, xs] = corona_DES(N)
                     j = randi(N); 
                 end
                 
-                U = rand();
-                
                 % first another contact for itself is scheduled
-                scheduled_events = [contact, id, t + t_c];
+                scheduled_events = [contact, id, t + exprnd(t_c)];
+                
+                U = rand();
                 
                 % then (with a certain probability) an infection event is
                 % scheduled, IF j is still susceptible
@@ -99,11 +107,20 @@ function [ts, xs] = corona_DES(N)
                 clear event_list;
                 event_list = tmp;
                 current_population(id) = 4;
+            case restrictions
+                t_c = 5*t_c;
+                p_i = 0.5 * p_i;
+                
         end
+        
+        if max_test < size(event_list,1)
+            max_test = size(event_list,1);
+        end
+        
         
         clear tmp;
         % TODO this can't perform well, find workaround (possibly by
-        % preallocating matrix with fives, which would be "dead" events)
+        % preallocating matrix with number not used yet, which would be "dead" events)
         tmp = schedule_event(event_list, scheduled_events);
         clear event_list;
         event_list = tmp;
@@ -118,13 +135,13 @@ function [ts, xs] = corona_DES(N)
     ts(counter:end) = [];
     xs(:,counter:end) = [];
     
-    hold on;
-    h = [];
-    h(1) = plot(ts, xs(1,:));
-    h(2) = plot(ts, xs(2,:));
-    h(3) = plot(ts, xs(3,:));
-    h(4) = plot(ts, xs(4,:));
-    legend(h,'S','E','I','R'); % this just won't match
+%     hold on;
+%     h = [];
+%     h(1) = plot(ts, xs(1,:));
+%     h(2) = plot(ts, xs(2,:));
+%     h(3) = plot(ts, xs(3,:));
+%     h(4) = plot(ts, xs(4,:));
+%     legend(h,'S','E','I','R'); % this doesn't work on my installation due to a bug but should work elsewhere
     
 end
     
