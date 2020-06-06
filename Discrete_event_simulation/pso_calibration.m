@@ -9,6 +9,13 @@ raw_data = readtable('Epikurve.dat', 'Delimiter', ',');
 
 infected = cumsum(raw_data.daily_infected)';
 
+t_e = 3-1.5; 
+% https://www.lungenaerzte-im-netz.de/krankheiten/covid-19/ansteckungsgefahr-inkubationszeit/
+% Im Schnitt betrage der Zeitraum zwischen Ansteckung und ersten Symptomen wohl drei Tage und damit weniger als die bisher angenommenen gut fünf Tage
+% https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Steckbrief.html#doc13776792bodyText8
+% Schon 1-2 Tage vorher infektiös
+% selbe quelle: 
+t_r = 6
 
 % use this as benchmark
 [a,b] = corona_DES(N, 12345, 2, 1, 14, 0.2);
@@ -25,7 +32,7 @@ err = timeseries_error(a, simulated_infected, 1:length(infected), infected);
 %TODO think about other initial values. maybe this is far from the right
 %scale
 % initialize swarm
-calibrated_param_len = 4; 
+calibrated_param_len = 2; 
 
 pos = rand(swarm_len, calibrated_param_len);
 vel = rand(swarm_len, calibrated_param_len);
@@ -46,10 +53,9 @@ while err > 1000 && counter < iterations
         fish_pos = pos(fish, :);
         fish_vel = vel(fish, :);
         
-        t_e = fish_pos(1);
-        t_c = fish_pos(2);
-        t_r = fish_pos(3);
-        p_i = fish_pos(4);
+
+        t_c = fish_pos(1);
+        p_i = fish_pos(2);
 
         [ts,xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i);
         err = timeseries_error(ts, xs, 1:length(infected), infected);
@@ -67,23 +73,30 @@ while err > 1000 && counter < iterations
         u = rand();
         v = rand();
         
-        vel(fish, 1:3) = weights(1)* fish_vel(1:3) + weights(2)*u*(best_param_fish(fish,1:3) - fish_pos(1:3)) + weights(3)*v*(best_param_global(1:3) -fish_pos(1:3));
         
-        assert(p_i<=1 && p_i >=0)
-        diff = abs([0,1] - p_i);
-        p_i = p_i + (rand() - diff(1)) / 100;
-        % this is very arbitrary, but makes real steps while still
-        % remaining in [0,1]
-        assert(p_i<=1 && p_i >=0);
+        % TODO i dont know how to update the velocities while maintaining
+        % my constraints (e.g. that p_i is in [0,1])
         
-        p_i = rand();
-
-
         
-        %move
-        pos(fish, :) = pos(fish, :) + vel(fish,:);
-        pos(fish, 4) = p_i;
-        pos(pos < 0) = 0;
+%         vel(fish, 1:3) = weights(1)* fish_vel(1:3) + weights(2)*u*(best_param_fish(fish,1:3) - fish_pos(1:3)) + weights(3)*v*(best_param_global(1:3) -fish_pos(1:3));
+        
+        
+        
+%         assert(p_i<=1 && p_i >=0)
+%         diff = abs([0,1] - p_i);
+%         p_i = p_i + (rand() - diff(1)) / 100;
+%         % this is very arbitrary, but makes real steps while still
+%         % remaining in [0,1]
+%         assert(p_i<=1 && p_i >=0);
+%         
+%         p_i = rand();
+% 
+% 
+%         
+%         %move
+%         pos(fish, :) = pos(fish, :) + vel(fish,:);
+%         pos(fish, 4) = p_i;
+%         pos(pos < 0) = 0;
         
         
         

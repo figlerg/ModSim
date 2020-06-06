@@ -23,20 +23,12 @@ function [t_mean, x_mean] = monte_carlo_covid(N,iterations, t_e, t_c, t_r, p_i)
         
 %         bin(bin == 0) = max(bin); % necessary when the process stops before end of reference time (these bins are empty and 0 is returned)
         % TODO print a warning or something
-%         missing = length(ref_time) - size(xs,2);
-%         if missing > 0
-%             fillup = repmat(xs(:,end) , missing)
-%             x_sync = [xs(1:4,bin),fillup]; % this isn't working at all
-%         end
         x_sync = [xs(1:4,bin)];
         
-        % since matrix dimensions here never agree in case that not all
-        % bins are used
 %         x_mean = x_mean*(i-1)/i + x_sync/i;
-        x_sync_saved(:,:,i) = x_sync;
+        x_sync_saved(:,:,i) = x_sync; % necessary for parallel computing
         
     end
     
     x_mean = mean(x_sync_saved,3);
-    size(x_mean)
 end

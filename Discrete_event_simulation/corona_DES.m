@@ -24,13 +24,13 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
     
     % execution params
     max_iterations = max([N/2, 1000000]);
-    %     xs = ones(N,max_iterations); % for saving the population values
     xs = zeros(4,max_iterations); % saving populations is easier just by looking at the sums
     ts = zeros(1,max_iterations); % saving the time steps
     current_population = ones(N,1); % this is basically interchangeable with xs, but has information of all individuals. 
     % all ones means all are susceptible.
     % (i could have saved everything in xs but it would have been
     % cumbersome)
+
 
     % update times (might be exchanged with exprnd()mean parameters and
     % sampled in switch
@@ -51,11 +51,10 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
     
     restrictions_scheduled = false;
     
-    max_test = 0
     
     rng(seed);
-    
-    while ~isempty(event_list) && counter < max_iterations
+    t = 0;
+    while ~isempty(event_list) && counter < max_iterations && t < 80
         counter = counter + 1;
         event = event_list(1,:);
         event_list(1,:) = [];
@@ -65,7 +64,7 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
         t = event(3);
         ts(counter) = t;
         
-        if t > 21 && ~restrictions_scheduled
+        if t > 30 && ~restrictions_scheduled
             schedule_event(event_list, [5,-1,t]);
         end
         
@@ -108,18 +107,18 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
                 event_list = tmp;
                 current_population(id) = 4;
             case restrictions
-                t_c = 5*t_c;
-                p_i = 0.5 * p_i;
+%                 t_c = 5*t_c;
+%                 p_i = 0.5 * p_i;
+                t_c = 6;
+                
+                restrictions_scheduled = true;
                 
         end
         
-        if max_test < size(event_list,1)
-            max_test = size(event_list,1);
-        end
         
         
         clear tmp;
-        % TODO this can't perform well, find workaround (possibly by
+        % TODO this can't perform well but ius necessary right now, find workaround (possibly by
         % preallocating matrix with number not used yet, which would be "dead" events)
         tmp = schedule_event(event_list, scheduled_events);
         clear event_list;
@@ -137,11 +136,12 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
     
 %     hold on;
 %     h = [];
-%     h(1) = plot(ts, xs(1,:));
-%     h(2) = plot(ts, xs(2,:));
-%     h(3) = plot(ts, xs(3,:));
-%     h(4) = plot(ts, xs(4,:));
+%     h(1) = plot(ts, xs(1,:), 'r');
+%     h(2) = plot(ts, xs(2,:)), 'b';
+%     h(3) = plot(ts, xs(3,:)),'g';
+%     h(4) = plot(ts, xs(4,:)), 'k';
 %     legend(h,'S','E','I','R'); % this doesn't work on my installation due to a bug but should work elsewhere
+%     
     
 end
     
