@@ -38,5 +38,13 @@ for i = 1:size(X_test,1)
     end
 end
 ratio = counter/size(X_test,1)
+
+lisi_digit = reshape(abs(double(lisi_pic(:,:,1)')/255 -1), [28*28,1])
+% lisi_digit = test';
+ANN_guess_vector = feedforward_simple(network,lisi_digit);
     
+% transform to corresponding digit
+[~,ANN_guess] = max(ANN_guess_vector);
+ANN_guess = ANN_guess-1
+
     
