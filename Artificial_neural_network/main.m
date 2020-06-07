@@ -6,6 +6,10 @@ Y_train = d.trainY;
 X_test = double(d.testX)/255;
 Y_test = d.testY;
 
+% weirdly, rescaling by 1/255 gives the network a 20% accuracy boost
+% (255 is the max value and corresponds to pure black -> so now the
+% X values are 0-1 greayscale values)
+
 % this function initializes the network with random numbers
 network = init_network([28*28,20, 10]);
 
