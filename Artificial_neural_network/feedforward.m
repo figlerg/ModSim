@@ -10,7 +10,7 @@ activations{1} = x;
 zs{1} = x; % this doesn't need to be here, but is hopefully less confusing 
 % than having it shifted by one from the indices of activations
 for i=1:n
-    z = network{i,1}*activations{i}- network{i,2};
+    z = network{i,1}*activations{i}+ network{i,2};
     activations{i+1} = sigmf(z,[1,0]);
     zs{i +1} = z;
 end
