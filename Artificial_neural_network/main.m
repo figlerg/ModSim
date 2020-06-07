@@ -14,7 +14,7 @@ Y_test = d.testY;
 network = init_network([28*28,20, 10]);
 
 % training via stochastic gradient descent method
-network = train_ANN(network, X_train, Y_train, 3, 10);
+network = train_ANN(network, X_train, Y_train, 3, 10, true);
 
 
 % network is now trained, can be used on the test data to get an estimate
@@ -39,7 +39,9 @@ for i = 1:size(X_test,1)
 end
 ratio = counter/size(X_test,1)
 
-lisi_digit = reshape(abs(double(lisi_pic(:,:,1)')/255 -1), [28*28,1])
+% try it on a digit written by my sister:
+load('lisi_digit')
+% lisi_digit = reshape(abs(double(lisi_pic(:,:,1)')/255 -1), [28*28,1])
 % lisi_digit = test';
 ANN_guess_vector = feedforward_simple(network,lisi_digit);
     

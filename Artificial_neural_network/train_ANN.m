@@ -1,4 +1,8 @@
-function network_out = train_ANN(network, X_train, y_train, eta, mini_batch_sz)
+function network_out = train_ANN(network, X_train, y_train, eta, mini_batch_sz,digit_mode)
+    % this function implements stochastic gradient descent. I could further
+    % improve the results by reshuffling into several epochs and training
+    % more, as well as several other techniques.
+
     network_out = network;
     batch_starts = 1:mini_batch_sz:size(X_train, 1);
     
@@ -26,7 +30,7 @@ function network_out = train_ANN(network, X_train, y_train, eta, mini_batch_sz)
         for j = batch_start:batch_end
             X = X_train(j,:)';
             y = y_train(j);
-            [nabla_C_w, nabla_C_b] = backdrop(network_out,X,y);
+            [nabla_C_w, nabla_C_b] = backdrop(network_out,X,y,digit_mode);
             
             changes = [nabla_C_w, nabla_C_b];
             
@@ -38,6 +42,9 @@ function network_out = train_ANN(network, X_train, y_train, eta, mini_batch_sz)
         update = cell_scaling(mean_changes, eta/batch_width);
         
         network_out = network_out - update;
+        if ~all(isfinite(update{1}))
+            'cant be'
+        end
 %         network_out{end};
         
 %         if i*mini_batch_sz>size(X_train)-10*mini_batch_sz

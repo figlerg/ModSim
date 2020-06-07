@@ -1,10 +1,11 @@
-function [nabla_C_w, nabla_C_b] = backdrop(network,x,y)
+function [nabla_C_w, nabla_C_b] = backdrop(network,x,y,digit_mode)
 % THIS IS WHERE THE MAGIC HAPPENS
 %this function should compute the changes that need to be made to the
 %weights and biases after one sample
 % x ... input values (so 1st layer activation)
 % y ... desired output digit
 % network ... Cell array containing weights and biases
+% mode is boolean value, digit mode is for classifying written digits
 
 n = size(network,1)+1; %number of layers
 
@@ -15,13 +16,18 @@ delta = cell(n-1,1);
 nabla_C_w = cell(n-1,1);
 nabla_C_b = cell(n-1,1);
 
-y_vector = zeros(10,1);
-y_vector(y+1) = 1;
-% now we have a vectorized label for int label y
+if digit_mode
+    y_vector = zeros(10,1);
+    y_vector(y+1) = 1;
+    % now we have a vectorized label for int label y
 
-% using (mostly) the same notation as michael nielsen in his free ebook:
-% http://neuralnetworksanddeeplearning.com/
-% (some indices are shifted)
+    % using (mostly) the same notation as michael nielsen in his free ebook:
+    % http://neuralnetworksanddeeplearning.com/
+    % (some indices are shifted)
+else
+    % for other networks
+    y_vector = y;
+end
 [zs, activations] = feedforward(network, x);
 
 ANN_output = activations{end};
