@@ -1,6 +1,6 @@
 d = load('mnist.mat');
 
-network = init_network([28*28,42,21, 10]);
+network = init_network([28*28,20, 10]);
 
 
 
@@ -34,7 +34,7 @@ some_y = Y_train(6);
 % network{1,2} = table2array(biases1init);
 % network{2,2} = table2array(biases2init);
 
-network = train_ANN(network, X_train, Y_train, 3, 100);
+network = train_ANN(network, X_train, Y_train, 3, 10);
 
 feedforward_simple(network, some_x) % lol
 some_y
