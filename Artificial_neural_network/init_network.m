@@ -25,12 +25,7 @@ for i=1:n-1
 end
 
 
-% for i=1:n-1
-%     %only for testing
-%     output{i,1};
-%     output{i,2};
-%     
-% end
+
 
 network=output;
 end

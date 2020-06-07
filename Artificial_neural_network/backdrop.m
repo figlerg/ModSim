@@ -1,4 +1,5 @@
 function [nabla_C_w, nabla_C_b] = backdrop(network,x,y)
+% THIS IS WHERE THE MAGIC HAPPENS
 %this function should compute the changes that need to be made to the
 %weights and biases after one sample
 % x ... input values (so 1st layer activation)
@@ -18,8 +19,9 @@ y_vector = zeros(10,1);
 y_vector(y+1) = 1;
 % now we have a vectorized label for int label y
 
-% using same notation as michael nielsen in his free ebook:
+% using (mostly) the same notation as michael nielsen in his free ebook:
 % http://neuralnetworksanddeeplearning.com/
+% (some indices are shifted)
 [zs, activations] = feedforward(network, x);
 
 ANN_output = activations{end};
@@ -66,34 +68,3 @@ end
 end
 
 
-
-
-% input = x
-% n=size(network,1)+1 %number of layers
-% 
-% nabla_w = network(:,1);
-% nabla_b = network(:,2); %i actually just need the right shape, 
-% %but all values will get overritten anyways...
-% 
-% 
-% 
-% 
-% 
-% desired_output = zeros(10,1);
-% desired_output(y+1)=1;  
-% %converts int value of trainY to a vector corresponding to the desired neuron output
-% 
-% %the following lines implement the gradient descent method
-% cost_derivative = feedforward_simple(network,x)-desired_output
-% 
-% zs = feedforward(network,input)%all layer activations
-% 
-% delta = cost_derivative .* sigmoid_deriv(zs{n})' %kettenregel? wie testen?
-% delta = delta'
-% nabla_b{n-1}=delta
-% 
-% delta
-% network{n-1,1}
-% nabla_w{n-1}= delta * network{n-2,1};
-% 
-% gradient_vector = [nabla_w,nabla_b];
