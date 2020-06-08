@@ -1,4 +1,4 @@
-function [t_mean, x_mean] = monte_carlo_covid(N,iterations, t_e, t_c, t_r, p_i)
+function [t_mean, x_mean] = monte_carlo_covid(N,iterations, t_e, t_c, t_r, p_i,t_c_2, initial_nr_infected,p_i_2)
     
     
     ref_time = 0:100;
@@ -12,7 +12,7 @@ function [t_mean, x_mean] = monte_carlo_covid(N,iterations, t_e, t_c, t_r, p_i)
         % this means it's reproducible but a different seed in each
         % iteration
         seed = i+10000;
-        [ts,xs] = corona_DES(N,seed, t_e, t_c, t_r, p_i);
+        [ts,xs] = corona_DES(N,seed, t_e, t_c, t_r, p_i,t_c_2, initial_nr_infected,p_i_2);
         
         [~,~,bin] = histcounts(ref_time,ts);
         

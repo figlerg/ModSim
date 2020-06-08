@@ -1,14 +1,9 @@
-function [param] = pso_calibration(swarm_len, N, calibration_data, weights, interval_p,fixed_param)
+function [param,seed] = pso_calibration(swarm_len, N, calibration_data, weights ,fixed_param)
 % a particle swarm optimisation algorithm for the corona discrete event
 % simulation
 
-
 rng(12345);
-
-% raw_data = readtable('Epikurve.dat', 'Delimiter', ',');
-% 
-% infected = cumsum(raw_data.daily_infected)';
-% 
+ 
 % t_e = 3-1.5; 
 % https://www.lungenaerzte-im-netz.de/krankheiten/covid-19/ansteckungsgefahr-inkubationszeit/
 % Im Schnitt betrage der Zeitraum zwischen Ansteckung und ersten Symptomen wohl drei Tage und damit weniger als die bisher angenommenen gut fünf Tage
@@ -17,10 +12,22 @@ rng(12345);
 % selbe quelle: 
 % t_r = 6
 
-infected = calibration_data
+% N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_infected,p_i_2
 
-% use this as benchmark
-[a,b] = corona_DES(N, 12345, 2, 1, 14, 0.2);
+N = fixed_param(1); t_e = fixed_param(2); t_r = fixed_param(3);
+initial_nr_infected = fixed_param(4);
+
+
+
+
+infected = calibration_data;
+
+p_i = 0.05;
+t_c = 0.3;
+
+
+% % use this as benchmark
+[a,b] = corona_DES(N,202020,t_e,t_c,t_r,0.1,7,initial_nr_infected,p_i);
 simulated_infected = sum(b(2:end,:),1); % everyone that has/had the virus in simulation
 err = timeseries_error(a, simulated_infected, 1:length(infected), infected);
 
@@ -37,25 +44,35 @@ err = timeseries_error(a, simulated_infected, 1:length(infected), infected);
 calibrated_param_len = 2; 
 
 % experimental intervals in which computation time does not explode
-interval_p_i = [0.14,0.16];
-interval_t_c = [0.15,0.35];
+interval_p_i = [0.04,0.1];
+interval_t_c = [0.15,0.5];
 
-pos = rand(swarm_len, calibrated_param_len);
-pos(:,1) = rand(:,1)*interval_p_i 
+pos = zeros(swarm_len, calibrated_param_len);
+pos(:,1) = rand(swarm_len,1)*(interval_p_i(2)-interval_p_i(1)) + interval_p_i(1);
+pos(:,2) = rand(swarm_len,1)*(interval_t_c(2)-interval_t_c(1)) + interval_t_c(1);
 
-vel = rand(swarm_len, calibrated_param_len);
+vel = zeros(swarm_len, calibrated_param_len);
+dist_1 = interval_p_i - pos(:,1);
+dist_2 = interval_t_c - pos(:,2);
+update_1 = rand(swarm_len,1).*(dist_1(:,2)-dist_1(:,1)) + dist_1(:,1);
+update_2 = rand(swarm_len,1).*(dist_2(:,2)-dist_2(:,1)) + dist_2(:,1);
+vel = vel+[update_1,update_2]/100;
 
+best_seed = 12345;
 seed = 12345;
 best_err_global = err; 
-best_param_global = zeros(calibrated_param_len,1);
+best_param_global = [p_i,t_c];
 
 best_err_fish = inf(swarm_len,1); 
 best_param_fish = zeros(swarm_len,calibrated_param_len);
 
 iterations = 10;
 counter = 0;
-while err > 1000 && counter < iterations
+while err > 10000 && counter < iterations
     counter = counter +1;
+    
+    % this should be a parallel loop, but there is some problem with
+    % variables
     for fish = 1:swarm_len
         seed = seed + 123;
         fish_pos = pos(fish, :);
@@ -65,12 +82,14 @@ while err > 1000 && counter < iterations
         t_c = fish_pos(1);
         p_i = fish_pos(2);
 
-        [ts,xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i);
+        [ts,xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i,t_c*20, initial_nr_infected,p_i/3);
+        
         err = timeseries_error(ts, xs, 1:length(infected), infected);
         
         if err < best_err_global
             best_err_global = err;
             best_param_global = fish_pos;
+            best_seed = seed;
         end
         if err < best_err_fish
             best_err_fish(fish) = err;
@@ -81,56 +100,29 @@ while err > 1000 && counter < iterations
         u = rand();
         v = rand();
         
+%         vel = zeros(swarm_len, calibrated_param_len);
+%         dist_1 = interval_p_i - pos(fish,1);
+%         dist_2 = interval_t_c - pos(fish,2);
+%         update_1 = rand()*(dist_1(1,2)-dist_1(1,1)) + dist_1(1,1);
+%         update_2 = rand()*(dist_2(1,2)-dist_2(1,1)) + dist_2(1,1);
+        weights = [0.3,0.5];
         
+        update = normr(fish_vel + weights(1)*u*(best_param_global - fish_pos) + weights(2)*v*(best_param_fish(fish,:) - fish_pos));
+        min_distance = min(abs([fish_pos(1)-interval_p_i',fish_pos(2)-interval_t_c']),[],'all');
         
-        % TODO i dont know how to update the velocities while maintaining
-        % my constraints (e.g. that p_i is in [0,1])
+        fish_vel = update *1/2* min_distance;
+        % this is rather creative, but it should make it impossible to
+        % leave the parameter box...
         
-        
-%         vel(fish, 1:3) = weights(1)* fish_vel(1:3) + weights(2)*u*(best_param_fish(fish,1:3) - fish_pos(1:3)) + weights(3)*v*(best_param_global(1:3) -fish_pos(1:3));
-        
-        
-        
-%         assert(p_i<=1 && p_i >=0)
-%         diff = abs([0,1] - p_i);
-%         p_i = p_i + (rand() - diff(1)) / 100;
-%         % this is very arbitrary, but makes real steps while still
-%         % remaining in [0,1]
-%         assert(p_i<=1 && p_i >=0);
-%         
-%         p_i = rand();
-% 
-% 
-%         
-%         %move
-%         pos(fish, :) = pos(fish, :) + vel(fish,:);
-%         pos(fish, 4) = p_i;
-%         pos(pos < 0) = 0;
-        
-        
-        
-%         vel(fish, 1:3) = fish_vel(1:3) + rand(1,calibrated_param_len-1); % THIS IS NOT CORRECT IF I STILL CALIBRATE p_i (prob)
-%        
-%         % the following makes sure that the new p_i is in [0,1]
-%         assert(p_i<=1 && p_i >=0)
-%         diff = abs([0,1] - p_i)
-%         p_i = p_i + (rand() - diff(1)) / 100;
-%         % this is very arbitrary, but makes real steps while still
-%         % remaining in [0,1]
-%         assert(p_i<=1 && p_i >=0);
-% 
-%         vel(fish, 4) = p_i;
-%         
-%         new_fish_vel = vel(fish,:);
-%         pos(fish, :)
-%         
-% %         pos(fish, :) = weights(1)* fish_pos + weights(2)* new_fish_vel + weights(3)*(best_param_fish(:,fish)' - fish_pos) + weights(4)*(best_param_global -fish_pos);
-        
-        
+        vel(fish,:) = fish_vel
     end
-end
     
-param = best_param_global;
+    pos = pos + vel
+    err
 end
+param = best_param_global
+end
+        
+        
 
-
+        
