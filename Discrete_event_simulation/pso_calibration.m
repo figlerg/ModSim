@@ -1,21 +1,23 @@
-function [param] = pso_calibration(swarm_len, N, calibration_data, weights, interval_p)
+function [param] = pso_calibration(swarm_len, N, calibration_data, weights, interval_p,fixed_param)
 % a particle swarm optimisation algorithm for the corona discrete event
 % simulation
 
 
 rng(12345);
 
-raw_data = readtable('Epikurve.dat', 'Delimiter', ',');
-
-infected = cumsum(raw_data.daily_infected)';
-
-t_e = 3-1.5; 
+% raw_data = readtable('Epikurve.dat', 'Delimiter', ',');
+% 
+% infected = cumsum(raw_data.daily_infected)';
+% 
+% t_e = 3-1.5; 
 % https://www.lungenaerzte-im-netz.de/krankheiten/covid-19/ansteckungsgefahr-inkubationszeit/
 % Im Schnitt betrage der Zeitraum zwischen Ansteckung und ersten Symptomen wohl drei Tage und damit weniger als die bisher angenommenen gut fünf Tage
 % https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Steckbrief.html#doc13776792bodyText8
 % Schon 1-2 Tage vorher infektiös
 % selbe quelle: 
-t_r = 6
+% t_r = 6
+
+infected = calibration_data
 
 % use this as benchmark
 [a,b] = corona_DES(N, 12345, 2, 1, 14, 0.2);
@@ -34,7 +36,13 @@ err = timeseries_error(a, simulated_infected, 1:length(infected), infected);
 % initialize swarm
 calibrated_param_len = 2; 
 
+% experimental intervals in which computation time does not explode
+interval_p_i = [0.14,0.16];
+interval_t_c = [0.15,0.35];
+
 pos = rand(swarm_len, calibrated_param_len);
+pos(:,1) = rand(:,1)*interval_p_i 
+
 vel = rand(swarm_len, calibrated_param_len);
 
 seed = 12345;
@@ -44,7 +52,7 @@ best_param_global = zeros(calibrated_param_len,1);
 best_err_fish = inf(swarm_len,1); 
 best_param_fish = zeros(swarm_len,calibrated_param_len);
 
-iterations = 100;
+iterations = 10;
 counter = 0;
 while err > 1000 && counter < iterations
     counter = counter +1;
@@ -72,6 +80,7 @@ while err > 1000 && counter < iterations
         
         u = rand();
         v = rand();
+        
         
         
         % TODO i dont know how to update the velocities while maintaining

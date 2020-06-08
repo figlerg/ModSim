@@ -68,7 +68,7 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_in
         t = event(3);
         ts(counter) = t;
         
-        if t > 30 && ~restrictions_scheduled
+        if t > 35 && ~restrictions_scheduled
             event = [5,-1,t];
             if isempty(event_list)
                 event_list(1,:) = event;
