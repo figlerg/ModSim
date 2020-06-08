@@ -1,4 +1,4 @@
-function [param] = pso_calibration(swarm_len, N, calibration_data, weights)
+function [param] = pso_calibration(swarm_len, N, calibration_data, weights, interval_p)
 % a particle swarm optimisation algorithm for the corona discrete event
 % simulation
 

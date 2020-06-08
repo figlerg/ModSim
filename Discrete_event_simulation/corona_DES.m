@@ -100,8 +100,13 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_in
                 end
                 
                 % first another contact for itself is scheduled
-                scheduled_events = [contact, id, t + exprnd(t_c)];
-                
+                if current_population(j) == 1
+                    scheduled_events = [contact, id, t + exprnd(t_c)];
+                else
+                    % this is equivalent to canceling the contact event
+                    % later on, but needs less computation time
+                    scheduled_events = [];
+                end
                 U = rand();
                 
                 % then (with a certain probability) an infection event is
@@ -113,11 +118,11 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_in
             case recover
                 update = [0 0 -1 1]';
                 scheduled_events = [];
-                [~, index] = ismember(event_list(:,1:2),event(1:2),'rows');
-    
-                index = find(index); % converts from logical to indices
-    
-                event_list(index,:) = []; % delete event from list
+%                 [~, index] = ismember(event_list(:,1:2),event(1:2),'rows');
+%     
+%                 index = find(index); % converts from logical to indices
+%     
+%                 event_list(index,:) = []; % delete event from list
                 
 %                 tmp =  cancel_event(event_list, [contact, id, t]);
 %                 clear event_list;
