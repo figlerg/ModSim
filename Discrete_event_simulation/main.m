@@ -2,16 +2,16 @@ clear all;
 
 % fixed values:
 N = 9000000;
-t_r = 9;
+t_r = 10;
 t_e = 1.5;
-t_c = 0.2;
-t_c_2 = 7;
+t_c = 0.25;
+t_c_2 = 5;
 initial_nr_infected = 10;
 
 % p_i = 0.051490003012856;
 % p_i = 0.07;
-p_i = 0.1;
-p_i_2 = p_i/2;
+p_i = 0.06;
+p_i_2 = p_i/1.9;
 
 
 rng(12345);
@@ -39,7 +39,7 @@ real_curve = raw_data.CON/100;
 
 [ts, xs] = corona_DES(N, 202020, t_e, t_c, t_r, p_i,t_c_2, initial_nr_infected,p_i_2);
 
-plot(ts,sum(xs(3,:),1),(1:length(real_curve)) + t_e,real_curve)
+plot(ts,sum(xs(3,:),1),'r',(1:length(real_curve)),real_curve,'b')
 
 
 

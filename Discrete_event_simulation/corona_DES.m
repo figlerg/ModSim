@@ -58,7 +58,7 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_in
     
     rng(seed);
     t = 0;
-    while ~isempty(event_list) && counter < max_iterations && t < 80
+    while ~isempty(event_list) && counter < max_iterations && t < 100
         counter = counter + 1;
         event = event_list(1,:);
         event_list(1,:) = [];
