@@ -1,4 +1,4 @@
-function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
+function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i, t_c_2, initial_nr_infected,p_i_2)
     % code:
     % -event ids
     %   1 infection
@@ -45,8 +45,12 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
     event_list = [];
     xs(:,1) = [N,0,0,0];
     event = [infection,1,0]; % individual 1 gets infected at t = 0
-    event_list = schedule_event(event_list, event);
-    
+%     event_list = schedule_event(event_list, event);
+    event_list = repmat(event,initial_nr_infected,1);
+    event_list(:,2) = 1:length(event_list(:,2));
+
+    event_list = event;
+
     counter = 1;
     
     restrictions_scheduled = false;
@@ -65,7 +69,15 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
         ts(counter) = t;
         
         if t > 30 && ~restrictions_scheduled
-            schedule_event(event_list, [5,-1,t]);
+            event = [5,-1,t];
+            if isempty(event_list)
+                event_list(1,:) = event;
+            else
+                index = closest_value(event_list(:,3).',event(3));
+                event_list = [event_list(1:index-1,:); event ;event_list(index:end,:)];
+            end
+
+
         end
         
         switch event_id
@@ -101,29 +113,43 @@ function [ts, xs] = corona_DES(N, seed, t_e, t_c, t_r, p_i)
             case recover
                 update = [0 0 -1 1]';
                 scheduled_events = [];
+                [~, index] = ismember(event_list(:,1:2),event(1:2),'rows');
+    
+                index = find(index); % converts from logical to indices
+    
+                event_list(index,:) = []; % delete event from list
                 
-                tmp =  cancel_event(event_list, [contact, id, t]);
-                clear event_list;
-                event_list = tmp;
+%                 tmp =  cancel_event(event_list, [contact, id, t]);
+%                 clear event_list;
+%                 event_list = tmp;
                 current_population(id) = 4;
             case restrictions
 %                 t_c = 5*t_c;
 %                 p_i = 0.5 * p_i;
-                t_c = 6;
+                t_c = t_c_2;
+                p_i = p_i_2;
                 
                 restrictions_scheduled = true;
                 
         end
         
+        for k = 1:size(scheduled_events,1)
+            event = scheduled_events(k,:);
+            if isempty(event_list)
+                event_list(1,:) = event;
+            else
+                index = closest_value(event_list(:,3).',event(3));
+                event_list = [event_list(1:index-1,:); event ;event_list(index:end,:)];
+            end
+        end
         
-        
-        clear tmp;
-        % TODO this can't perform well but ius necessary right now, find workaround (possibly by
-        % preallocating matrix with number not used yet, which would be "dead" events)
-        tmp = schedule_event(event_list, scheduled_events);
-        clear event_list;
-        event_list = tmp;
-        clear tmp;
+%         clear tmp;
+%         % TODO this can't perform well but ius necessary right now, find workaround (possibly by
+%         % preallocating matrix with number not used yet, which would be "dead" events)
+%         tmp = schedule_event(event_list, scheduled_events);
+%         clear event_list;
+%         event_list = tmp;
+%         clear tmp;
         
         xs(:,counter) = xs(:,counter-1) + update;
         ts(counter) = t;
