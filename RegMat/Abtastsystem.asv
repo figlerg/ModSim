@@ -1,0 +1,89 @@
+% system model
+A = [-1 0; 1 0];
+B = [1;0];
+C = [0 1];
+D = 0;
+h = 0.1;
+time = 10; % simulation time in seconds
+
+% case 1
+[U,t] = gensig('sin', 2*pi, time , h);
+X_0 = [0.1; 0.1];
+sys = ss(A,B,C,D); % construct system model automatically
+
+figure(1);
+[Ysin,~,~] = lsim(sys, U, t, X_0) % simulation of response
+plot(t,Ysin);
+title('Response y for u = sin(x), x(0) = (' + strjoin(string(X_0),',')+')')
+
+% case 2
+U_2 = zeros(size(t));
+X_0_2 = [5;5];
+figure(2);
+lsim(sys, U_2, t, X_0_2);
+title('Response y to u = 0, x(0) = (' + strjoin(string(X_0_2),',')+')')
+
+% Task 2
+% [t,y] = forward_euler(h, time, X_0,U);
+[t,y] = forward_euler(h, time, X_0,U);
+figure(3);
+Ysin = Ysin'
+plot(t,y,t,Ysin);
+title('Explicit euler vs. lsim')
+
+% implicit euler- how to get x_k?
+[t,y] = backward_euler(h, time, X_0,U);
+figure(4);
+Ysin = Ysin'
+plot(t,y,t,Ysin);
+title('Explicit euler vs. lsim')
+
+
+figure(5)
+sysd = c2d(sys, h);
+[Ysind,~,~] = lsim(sysd, U, t, X_0);
+plot(t,Ysind,t,Ysin,t,y);
+title('explicit euler vs. c2d vs. lsim');
+legend('c2d','lsim','euler');
+
+
+
+function [t,y] = forward_euler(h,time,x_0,u)
+    k_max = int16(time/h)+1;
+    assert(length(u) == k_max);
+    t = 0:h:time;
+    n = size(x_0,1);
+    x = zeros(n,length(u));
+    
+    for i = 0:k_max-1
+        if i == 0
+            x(:,i+1) = x_0; % matlab indices start at 1
+        else
+%             x(:,i+1) = x(:,i) + h*([-1 0; 1 0] * x(:,i) + [u(i);0]);
+            x(:,i+1) = x(:,i) + h * ([-x(1,i) + u(i); x(1,i)]);
+        end
+    end
+    y = x(2,:);
+end
+        
+
+function [t,y] = backward_euler(h,time,x_0,u)
+    k_max = int16(time/h)+1;
+    assert(length(u) == k_max);
+    t = 0:h:time;
+    n = size(x_0,1);
+    x = zeros(n,length(u));
+    
+    for i = 0:k_max-1
+        if i == 0
+            x(:,i+1) = x_0; % matlab indices start at 1
+        else
+%             x(:,i+1) = x(:,i) + h*([-1 0; 1 0] * x(:,i) + [u(i);0]);
+%             x(:,i+1) = x(:,i) + h * ([-x(1,i) + u(i); x(1,i)]);
+           x(1,i+1) = (x(1,i) + h*u(i+1))/(1+h);
+           x(2,i+1) = x(2,i) + x(1,i+1);
+    end
+    y = x(2,:);
+    end
+
+end
