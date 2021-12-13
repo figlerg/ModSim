@@ -10,4 +10,6 @@ This repository features MATLAB code related to
 
 (3) MNIST dataset digit classifier (artificial neural networks)
 
-(4) Control models
+(4) SARS-Cov-2 spread model (discrete event model)
+
+(5) Control models
